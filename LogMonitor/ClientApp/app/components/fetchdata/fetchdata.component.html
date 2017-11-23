@@ -1,0 +1,18 @@
+<h1>Errors</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+<p *ngIf="!logs"><em>Loading...</em></p>
+
+<table class='table' *ngIf="logs">
+    <thead>
+        <tr>
+            <th>Log</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let record of logs">
+            <td>{{ record }}</td>
+        </tr>
+    </tbody>
+</table>
+
