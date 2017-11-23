@@ -27,27 +27,29 @@ namespace LogMonitor
             fileSystemWatcher.Changed += new FileSystemEventHandler((object sender, FileSystemEventArgs e) =>
             {
                 Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                using (Stream stream = File.Open(@"C:\temp\Error.txt", FileMode.Open, FileAccess.Read))
-                {
-                    stream.Seek(lastPosition, SeekOrigin.Begin);
-
-                    using (var streamReader = new StreamReader(stream))
-                    {
-                        string record;
-                        while ((record = streamReader.ReadLine()) != null)
-                        {
-
-                            clientList.ToList().ForEach(
-                               clientProxy => clientProxy.InvokeAsync("notify", record));
-                        }
-                        lastPosition = stream.Position;
-                    }
-                }
+                notifyClients();
 
             });
         }
 
-            
+        private static void notifyClients()
+        {
+            using (Stream stream = File.Open(@"C:\temp\Error.txt", FileMode.Open, FileAccess.Read))
+            {
+                stream.Seek(lastPosition, SeekOrigin.Begin);
+
+                using (var streamReader = new StreamReader(stream))
+                {
+                    string record;
+                    while ((record = streamReader.ReadLine()) != null)
+                    {
+                        clientList.ToList().ForEach(
+                           clientProxy => clientProxy.InvokeAsync("notify", record));
+                    }
+                    lastPosition = stream.Position;
+                }
+            }
+        }
 
         public void subscribe()
         {
@@ -59,19 +61,6 @@ namespace LogMonitor
         public static void register(IClientProxy client)
         {
             clientList.Add(client);
-            using (Stream stream = File.Open(@"C:\temp\Error.txt", FileMode.Open, FileAccess.Read))
-            {
-                stream.Seek(lastPosition, SeekOrigin.Begin);
-
-                using (var streamReader = new StreamReader(stream))
-                {
-                    string record;
-                    while ((record = streamReader.ReadLine()) != null)
-                    {
-                       client.InvokeAsync("notify", record);
-                    }
-                }
-            }
             fileSystemWatcher.EnableRaisingEvents = true;
         }
 
