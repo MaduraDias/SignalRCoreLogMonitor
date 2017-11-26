@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-alpha2-final" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="1.0.0-alpha2-final" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.0.0-preview00001" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,12 @@
   <ItemGroup>
     <!-- Files not to publish (note that the 'dist' subfolders are re-added below) -->
     <Content Remove="ClientApp\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Threading.Channels">
+      <HintPath>..\..\..\..\..\..\Users\diasm\.nuget\packages\system.threading.channels\4.5.0-preview1-25902-08\lib\netstandard2.0\System.Threading.Channels.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="DebugRunWebpack" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('wwwroot\dist') ">

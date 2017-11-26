@@ -9,30 +9,31 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Threading.Tasks.Channels;
 
+
+
 namespace LogMonitor
 {
-    public class SniffHub : Hub
+    public class LogMonitorHub : Hub
     {
         static FileSystemWatcher fileSystemWatcher;
-        static ConcurrentBag<IClientProxy> clientList;
+        static ConcurrentDictionary<string, IClientProxy> clientList;
         static long lastPosition;
 
-        static SniffHub()
+        static LogMonitorHub()
         {
             fileSystemWatcher = new FileSystemWatcher(@"C:\temp");
             fileSystemWatcher.NotifyFilter = NotifyFilters.CreationTime | NotifyFilters.LastWrite;
             fileSystemWatcher.Filter = "Error.txt";
-            clientList = new ConcurrentBag<IClientProxy>();
+            clientList = new ConcurrentDictionary<string, IClientProxy>();
 
             fileSystemWatcher.Changed += new FileSystemEventHandler((object sender, FileSystemEventArgs e) =>
             {
                 Thread.Sleep(TimeSpan.FromMilliseconds(50));
-                notifyClients();
-
+                publishLogChange();
             });
         }
 
-        private static void notifyClients()
+        private static void publishLogChange()
         {
             using (Stream stream = File.Open(@"C:\temp\Error.txt", FileMode.Open, FileAccess.Read))
             {
@@ -44,7 +45,7 @@ namespace LogMonitor
                     while ((record = streamReader.ReadLine()) != null)
                     {
                         clientList.ToList().ForEach(
-                           clientProxy => clientProxy.InvokeAsync("notify", record));
+                           clientProxy => clientProxy.Value.InvokeAsync("notify", record));
                     }
                     lastPosition = stream.Position;
                 }
@@ -53,15 +54,19 @@ namespace LogMonitor
 
         public void subscribe()
         {
-            var t = base.Context.Connection.ProtocolReaderWriter;
-            register(Clients.Client(base.Context.ConnectionId));
-            
+            register(base.Context.ConnectionId, Clients.Client(base.Context.ConnectionId));
         }
 
-        public static void register(IClientProxy client)
+        public static void register(string connectionId, IClientProxy client)
         {
-            clientList.Add(client);
+            clientList.TryAdd(connectionId, client);
             fileSystemWatcher.EnableRaisingEvents = true;
+        }
+
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            clientList.TryRemove(base.Context.ConnectionId, out IClientProxy clientProxy);
+            return base.OnDisconnectedAsync(exception);
         }
 
     }

@@ -32,7 +32,8 @@ namespace LogMonitor
         {
             app.UseSignalR(routes =>
             {
-                routes.MapHub<SniffHub>("SniffHub");
+                routes.MapHub<LogMonitorHub>("LogMonitorHub");
+                routes.MapHub<StreamHub>("StreamLogHub");
             });
 
             if (env.IsDevelopment())
