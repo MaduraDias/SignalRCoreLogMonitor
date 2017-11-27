@@ -9,12 +9,13 @@ import { HubConnection, MessagePackHubProtocol, TransportType} from "@aspnet/sig
 })
 export class FetchDataComponent {
     public forecasts: WeatherForecast[];
-    public logs: string[]=[];
-   
+    public logs: string[] = [];
+  
+    private connection:HubConnection
     constructor(http: Http, @Inject('BASE_URL') baseUrl: string) {
        
-      //  this.suscribeOnNonStreamLogMonitor(baseUrl);
-        this.suscribeOnStreamLogMonitor(baseUrl);
+        this.suscribeOnNonStreamLogMonitor(baseUrl);
+      //  this.suscribeOnStreamLogMonitor(baseUrl);
     }
 
     private suscribeOnNonStreamLogMonitor(baseUrl:string):void
@@ -33,21 +34,18 @@ export class FetchDataComponent {
             this.logs.push(data);
         });
 
-        connection.start().then(() => connection.invoke('subscribe'));
+        connection.start().then(() => connection.invoke('Subscribe'));
     }
 
     private suscribeOnStreamLogMonitor(baseUrl:string): void {
 
         let msgPackProtocol = new MessagePackHubProtocol();
         //Using MessagePack
-        let connection = new HubConnection(baseUrl + '/StreamHub', {
-            protocol: msgPackProtocol
-            , transport: TransportType.WebSockets
-        });
-
-        connection.stream("StreamLog").subscribe({
-            closed: false,
-            next: (item:string) => {
+        let connection = new HubConnection(baseUrl + '/StreamLogHub');
+        
+        connection.start().then(() =>
+            connection.stream("ObservableCounter", 1, 50).subscribe({
+            next: (item:any) => {
                 this.logs.push(item);
             },
             error:  (err:any)=> {
@@ -56,7 +54,9 @@ export class FetchDataComponent {
             complete: function () {
               //Do something
             }
-        });
+        }));
+
+       
     }
 }
 

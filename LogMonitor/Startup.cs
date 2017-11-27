@@ -48,7 +48,7 @@ namespace LogMonitor
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-
+            
             app.UseStaticFiles();
 
             app.UseMvc(routes =>
@@ -62,7 +62,7 @@ namespace LogMonitor
                     defaults: new { controller = "Home", action = "Index" });
             });
 
-
+         
         }
     }
 }
